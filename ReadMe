@@ -1,0 +1,10 @@
+This script get the info of the businesses. The script compatible with python27 and any OS.
+
+- Dependency
+    scrapy
+- How to run?
+  In cmd windows, go to the project folder and run following command;
+        python main.py --city [city name] --start [start date] --end [end date] --increment [increment]
+        ex: python main.py --city Tokyo --start 21/08/2018 --end 31/08/2018 --increment 2
+
+       -*- increment option is 1 as a default.
