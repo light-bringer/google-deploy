@@ -33,7 +33,7 @@ def get_reviews_by_nationality(url):
     offset = 0
     review_url = "https://www.booking.com/reviewlist.html?pagename=%s;cc1=%s;type=total;score=;dist=1;rows=100;r_lang=en" %(url.split("/")[-1].split(".")[0], url.split("/")[-2])
     while True:
-        url = review_url + ";offset=%d" %offset
+        url = review_url + ";offset=%d" % offset
         # print url
         reviews_nationlaity = get_reviews_by_nationality_on_page(url)
         # print (reviews_nationlaity)
@@ -57,21 +57,23 @@ class BookingSpider(scrapy.Spider):
     host = "https://www.booking.com"
     allowed_domains = ["www.booking.com"]
 
-    def __init__(self, city, checkin, checkout, increment, *args, **kwargs):
+    def __init__(self, city, hotel, checkin, checkout, increment, currency, *args, **kwargs):
         super(BookingSpider, self).__init__(*args, **kwargs)
         self.city = city
+        self.hotel = hotel
         self.min_checkin = datetime.strptime(checkin, '%d/%m/%Y')
         self.max_checkout = datetime.strptime(checkout, '%d/%m/%Y')
         self.increment = int(increment)
+        self.currency = currency
 
     def start_requests(self):
         checkin = self.min_checkin
         while (checkin + timedelta(days=self.increment)) <= self.max_checkout:
             checkout = checkin + timedelta(days=self.increment)
             query_data = {
-                'ss':self.city,
-                'checkin_month':checkin.month,
-                'checkin_monthday':checkin.day,
+                # 'ss': self.city,
+                'checkin_month': checkin.month,
+                'checkin_monthday': checkin.day,
                 'checkin_year': checkin.year,
                 'checkout_month': checkout.month,
                 'checkout_monthday': checkout.day,
@@ -80,9 +82,19 @@ class BookingSpider(scrapy.Spider):
                 # 'group_adults': args.no_adults,
                 # 'group_children': args.no_childrens
             }
+
+            if self.hotel != "None":
+                query_data['ss'] = self.hotel
+            else:
+                query_data['ss'] = self.city
+
+            if self.currency:
+                query_data['selected_currency'] = self.currency
+
             query_data = dict((k,v) for k,v in query_data.iteritems() if v is not None)
             search_url = "https://www.booking.com/searchresults.en-us.html?"
             url = search_url + urlencode(query_data)
+            print(url)
 
             checkin_string = checkin.strftime('%d/%m/%Y')
             checkout_string = checkout.strftime('%d/%m/%Y')
@@ -95,9 +107,12 @@ class BookingSpider(scrapy.Spider):
     def parse(self, response):
         items = response.xpath("//*[@data-hotelid]")
         for item in items:
-            url = self.host + item.xpath(".//a[contains(@class, 'hotel_name_link')]/@href").extract()[0].strip().replace("\n", '') + ";selected_currency=USD"
+            url = self.host + item.xpath(".//a[contains(@class, 'hotel_name_link')]/@href").extract()[0].strip().replace("\n", '')
             print ("URL: ", url)
             yield scrapy.Request(url, callback=self.page_parser, meta={'url': url, 'checkin': response.meta.get('checkin'), 'checkout': response.meta.get('checkout')})
+
+            if self.hotel != "None":
+                return
 
         next_page = response.xpath("//a[contains(@class, 'paging-next')]/@href").extract()
         if len(next_page) > 0:
@@ -199,7 +214,7 @@ class BookingSpider(scrapy.Spider):
                 room_id = tr.xpath(".//a[contains(@class, 'hprt-roomtype-link')]/@data-room-id").extract()
                 if len(room_id) > 0:
                     room_id = room_id[0]
-                    constants['Bed_Room_Type'] = ''.join(tr.xpath(".//a[contains(@class, 'hprt-roomtype-link')]/text()").extract()).replace("\n", '').strip()
+                    constants['Bed_Room_Type'] = ''.join(tr.xpath(".//span[contains(@class, 'hprt-roomtype-icon-link ')]/text()").extract()).replace("\n", '').strip()
 
                     constants['Bed_Type'] = ''.join(tr.xpath(".//li[contains(@class, 'bed-type')]//text()").extract()).replace("\n", '').strip()
                     if constants['Bed_Type'] == '':
@@ -207,14 +222,16 @@ class BookingSpider(scrapy.Spider):
 
                     room_info = response.xpath("//div[@data-room-id='%s']"%room_id)
                     constants['Amenities'] = self.get_amenities(room_info)
-
                     try:
                         constants['Room_Size'] = room_info.xpath(".//strong[contains(text(), 'Size')]/following-sibling::text()").extract()[0].strip()
-                    except:
+                    except IndexError:
+                        constants['Room_Size'] = \
+                        ''.join(room_info.xpath(".//*[@data-name-en='roomsize']//text()").extract()).strip()
+                    except Exception:
                         constants['Room_Size'] = ''
 
                 item = BookingItem(constants)
-                print ("Room Id: ", room_id)
+                # print ("Room Id: ", room_id)
 
                 try:
                     item['Sleeps'] = re.search(r"\d+", tr.xpath(".//span[@class='invisible_spoken']/text()").extract()[0].strip()).group()
@@ -261,7 +278,7 @@ class BookingSpider(scrapy.Spider):
         else:
             room_index = 1
             while True:
-                print ("Room Index", room_index)
+                # print ("Room Index", room_index)
                 trs = response.xpath("//tr[contains(@class, 'room_loop_counter%d\n')]" %room_index)
                 if len(trs) > 2:
                     constants['Bed_Room_Type'] = trs[0].xpath(".//*[contains(@class, 'rt_room_type_ico')]/following-sibling::text()").extract()[0]
@@ -376,5 +393,4 @@ class BookingSpider(scrapy.Spider):
             amenities = '\n'.join(tag.xpath(".//strong[contains(text(), 'Facilities:')]/following-sibling::text()").extract()).strip()
 
         return amenities
-
 
