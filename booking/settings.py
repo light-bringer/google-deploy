@@ -115,13 +115,22 @@ EXTENSIONS = {
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'harrods.pipelines.HarrodsPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'booking.pipelines.CleanPipeline': 300,
+   'booking.pipelines.MongoDBPipeline': 400,
+}
+
+MONGODB_SERVER = "localhost"
+MONGODB_PORT = 27017
+MONGODB_DB = "booking"
+MONGODB_COLLECTION = "hotels"
+
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
-#AUTOTHROTTLE_ENABLED = True
+#AUTOTHROTTLE_ENABLED = Tr
+
+# ue
 # The initial download delay
 #AUTOTHROTTLE_START_DELAY = 5
 # The maximum download delay to be set in case of high latencies
