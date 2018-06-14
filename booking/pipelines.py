@@ -29,6 +29,7 @@ class MongoDBPipeline(object):
             settings['MONGODB_PORT']
         )
         db = connection[settings['MONGODB_DB']]
+        db.authenticate(settings['MONGODB_ADMIN'], settings['MONGODB_PASSWORD'])
         self.collection = db[settings['MONGODB_COLLECTION']]
 
     def process_item(self, item, spider):
