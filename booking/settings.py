@@ -124,6 +124,8 @@ MONGODB_SERVER = "ds259410.mlab.com"
 MONGODB_PORT = 59410
 MONGODB_DB = "debapriya-dd"
 MONGODB_COLLECTION = "hotels"
+MONGODB_ADMIN = "root"
+MONGODB_PASSWORD = "admin123"
 
 
 # Enable and configure the AutoThrottle extension (disabled by default)
