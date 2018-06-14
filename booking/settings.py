@@ -120,9 +120,9 @@ ITEM_PIPELINES = {
    'booking.pipelines.MongoDBPipeline': 400,
 }
 
-MONGODB_SERVER = "localhost"
-MONGODB_PORT = 27017
-MONGODB_DB = "booking"
+MONGODB_SERVER = "ds259410.mlab.com"
+MONGODB_PORT = 59410
+MONGODB_DB = "debapriya-dd"
 MONGODB_COLLECTION = "hotels"
 
 
