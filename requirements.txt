@@ -3,7 +3,7 @@ asn1crypto==0.21.1
 attrs==16.3.0
 Automat==0.5.0
 beautifulsoup4==4.5.3
-certifi==2018.4.16
+certifi==2022.12.7
 cffi==1.9.1
 chardet==3.0.4
 constantly==15.1.0
